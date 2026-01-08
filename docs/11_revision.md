@@ -440,3 +440,98 @@ Priority: Model Recent Delinquency more heavily
 | Default Rate | Which categories are risky? | % by category | Direct risk measure       |
 | Chi-Square   | Is relationship real?       | p-value       | Gate: Keep or drop        |
 | Cramér's V   | How strong?                 | 0-1 scale     | Rank importance           |
+
+1. One Dataset or Multiple?
+Start with ONE unified dataset that contains all engineered features. Then let each model pick what it needs:
+Tree models (XGBoost, CatBoost) handle raw numeric/categorical features well
+Linear models (Logistic Regression) need transformed features (WOE, ratios, dummies)
+Neural networks need normalized/scaled numeric features
+Only create separate datasets if:
+You have 100+ features and linear models become unstable
+You want to test fundamentally different representations (e.g., WOE-encoded vs raw)
+Practical approach: Create one master dataset with 20-30 well-engineered features, then derive model-specific subsets from it.
+
+2. Recommended Models (Simple Explanations)
+Primary Models (Start Here)
+
+XGBoost / LightGBM / CatBoost (Gradient Boosting Trees)
+Best for: Raw numeric data, mixed types, non-linear patterns
+Why: Automatically finds interactions, handles outliers, robust to overfitting with proper tuning
+Data needs: Just feed it raw features; it will bin them internally. For categorical features, use one-hot or CatBoost's native handling
+Credit risk performance: Usually highest AUC (0.75-0.85 range)
+​
+
+Logistic Regression (with WOE)
+Best for: Interpretable models, regulatory compliance, baseline
+Why: Each coefficient = risk contribution; easy to explain to stakeholders
+Data needs: WOE-transformed features (see below) + dummies for categoricals
+Performance: Good AUC (0.70-0.78) but more interpretable
+​
+
+Optional Models
+
+Random Forest
+Best for: Baseline tree model, feature importance analysis
+Why: Less prone to overfitting than single trees, but usually outperformed by boosting
+
+Data needs: Similar to XGBoost
+Neural Network (TabNet)
+Best for: Very large datasets (100k+ samples), complex patterns
+Why: Can capture subtle interactions but needs more data
+Data needs: Normalized numeric features + embedded categoricals
+
+3. Feature Engineering by Model Type
+For Tree Models (XGBoost/CatBoost)
+Keep it simple:
+Dates: Convert to days_since_earliest_cr_line (numeric)
+States: One-hot encode or use CatBoost's cat_features parameter
+Ratios: debt_to_income, credit_utilization (already good as numeric)
+Counts: num_delinquencies, num_accounts (raw counts work fine)
+Key insight: Trees split on thresholds, so raw numeric values are fine. They'll find non-linear patterns automatically.
+For Linear Models (Logistic Regression)
+
+Transform everything:
+
+Dates: Bin into categories (<1yr, 1-3yrs, 3-5yrs, 5-10yrs, >10yrs) then WOE encode
+States: Compute WOE per state (target encoding with smoothing)
+Ratios: Keep as numeric but consider binning if relationship is non-linear
+Interaction: Create explicit interaction terms (e.g., high_utilization * short_history)
+
+WOE Encoding Steps:
+Bin numeric feature into 5-10 groups
+For each bin: WOE = ln(%good / %bad)
+Replace original values with WOE scores
+Critical: Compute WOE on training fold only, then apply to validation/test
+
+4. Better Feature Selection (Beyond Chi-Square)
+Chi-square/Cramer's V tells you association, not predictive power. Use this 3-step approach:
+
+Step 1: Domain Filtering
+Keep features that make business sense (credit history length, DTI, utilization)
+Drop IDs, free text, features with >50% missing values
+
+Step 2: Univariate Analysis
+For each feature: Plot default rate by bin/category
+Keep if: Clear monotonic trend or big differences between groups (e.g., default rate 5% vs 15%)
+Drop if: Flat line or random noise
+
+Step 3: Model-Based Selection
+For trees: Train XGBoost with all features, check feature_importances_. Drop bottom 10% that contribute <1% to splits
+For linear: Use L1 regularization (Lasso) to automatically drop weak features
+For both: Use recursive feature elimination (RFE) with your best model
+Avoid: Don't rely solely on chi-square p-values. A feature can have low chi-square but be important in combination with others.
+
+5. Practical Workflow
+Create master dataset with 20-30 engineered features
+Train XGBoost first (easiest, usually best performance)
+Use xgb.fit(X, y, eval_set=[(X_val, y_val)], early_stopping_rounds=50)
+Check feature importance from XGBoost to validate your engineering
+Train Logistic Regression with WOE for interpretability baseline
+
+Compare AUC/KS/Gini between models
+Only if linear model underperforms: Create WOE-only dataset and retrain
+
+Pro tip: For your earliest_cr_line, create both:
+mths_since_earliest_cr_line (for trees)
+Binned version with WOE (for logistic)
+This gives you flexibility without maintaining separate datasets.
