@@ -71,11 +71,20 @@ For **each numerical column**:
 | **mths_since_last_record** | 124 | 82.99% | NEGLIGIBLE ❌  |  Drop this column | 
 | **open_acc** | 84 | 0% |  WEAK–MODERATE ⚠️  |  Cap at 99.5 % that is 32. | 
 | **pub_rec** | 37 | 0% |  WEAK–MODERATE ⚠️  |  Make new feature from this column called as `has_pub_rec`. if pub_rec exist then 1 otherwise 0. This feature performing better. | 
-| **open_acc** | 84 | 0% |  WEAK–MODERATE ⚠️  |  Cap at 99.5 % that is 32. | 
 | **revol_bal** | 82819 | 0% |  NEGLIGIBLE ❌   |  Make a new feature `revol_bal_to_income` which is giving better results. Drop revol_bal column after that | 
 | **revol_util** | 82819 | 0.06% |  STRONG  ✅   |  Cap at 99.5% (upper limit). Median imputation for missing values. Create these new feature which is giving good results too: `high_revol_util`, `revol_util_tier`, `revol_stress_score` make these feature after capping + imputing missing values| 
 | **total_acc** | 142 | 0% |  NEGLIGIBLE ❌  |  Drop the column, no predictive power! | 
-| **total_acc** | 142 | 0% |  NEGLIGIBLE ❌  |  Drop the column, no predictive power! | 
+| **collections_12_mths_ex_med** | 15 | 0% |  NEGLIGIBLE ❌  |  Drop the column, no predictive power and way to sparse! | 
+| **mths_since_last_major_derog** | 173 | 73.3% |  NEGLIGIBLE ❌  |  DROP – High missingness, flat/non-monotonic default pattern | 
+| **acc_now_delinq** | 8 | 0% |  NEGLIGIBLE ❌  |  Drop the column, no predictive power!| 
+| **tot_coll_amt** | 12701 | 51% |  NEGLIGIBLE ❌  |  Drop the column, no predictive power!| 
+| **tot_cur_bal**  | 395,109 | 5.18%   | MODERATE ✅  | Impute missing with median, cap at 672,920 (p99) to remove outliers;
+| **open_acc_6m**  | 19 | 61.68%   | MODERATE ✅  | Impute missing with 0 (fill missing value with 0), cap (p99) or 4,  create new column after this which is: `recent_intensive`, and also cap new feature to p99. |
+
+
+
+
+
 
 
 
