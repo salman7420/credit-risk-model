@@ -80,6 +80,22 @@ For **each numerical column**:
 | **tot_coll_amt** | 12701 | 51% |  NEGLIGIBLE ❌  |  Drop the column, no predictive power!| 
 | **tot_cur_bal**  | 395,109 | 5.18%   | MODERATE ✅  | Impute missing with median, cap at 672,920 (p99) to remove outliers;
 | **open_acc_6m**  | 19 | 61.68%   | MODERATE ✅  | Impute missing with 0 (fill missing value with 0), cap (p99) or 4,  create new column after this which is: `recent_intensive`, and also cap new feature to p99. |
+| **open_act_il** | 50 | 61.68% |  MODERATE ✅  |  filled 0, capped 15.  Then use this feature (after transforming open_li_12m), and create new features like recency and intensity.| 
+| **open_li_12m** | 18 | 61.68% |  MODERATE ✅  |  filled 0, capped 5. Then use this feature (after transforming open_li_12m), and create new features like recency and intensity.| 
+| **il_recent_share** | 2 | 0% |  MODERATE ✅  |  ratio, capped at 1.0. | 
+| **il_recent_intensive** | 39 | 0% |  MODERATE ✅  |  capped at 50.0. | 
+| **open_il_24m** | 31 | 61.68% |  MODERATE ✅  |  filled 0, capped at 7.0 | 
+| **mths_since_rcnt_il** | 333 | 62.68% |  NEGLIGIBLE ❌ |  Pattern captured by related columns. | 
+| **total_bal_il** | 115500 |61.68% |  NEGLIGIBLE ❌ |  No pattern which makes sense. | 
+| **il_util** | 231 |66.81% | MODERATE ✅  | filled / impute 0, capped 128 |
+
+
+
+
+
+
+
+
 
 
 
