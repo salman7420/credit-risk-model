@@ -88,6 +88,39 @@ For **each numerical column**:
 | **mths_since_rcnt_il** | 333 | 62.68% |  NEGLIGIBLE ❌ |  Pattern captured by related columns. | 
 | **total_bal_il** | 115500 |61.68% |  NEGLIGIBLE ❌ |  No pattern which makes sense. | 
 | **il_util** | 231 |66.81% | MODERATE ✅  | filled / impute 0, capped 128 |
+| **open_rv_12m** | 27 |61.68% | MODERATE ✅  | filled / impute 0, capped 8 |
+| **open_rv_24m** | 45 |61.68% | MODERATE ✅  | filled / impute 0, capped 11 (p99.5) |
+| **max_bal_bc** | 27040 |61.68% | NEGLIGIBLE ❌ | filled / impute -1, capped 28362 (p99.5) |
+| **all_util** | 170 |61.68% | MODERATE ✅ | filled / impute 0, capped 108.0 |
+| **total_rev_hi_lim** | 26313 |5.18% | MODERATE ✅ | cap at 201600, impute missing value with median (24000), make a new feature which has given best result that is `util_total_rev_stress_log` after performing capping and fillna to both all util and total_rev_hi_lim. |
+| **stress_util_income** | MODERATE ✅ | Featured Engineer Column: Check below for column formula, want to capture pattern of income + total utilization. Less income + high utilization = risk accounts.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## stress_util_income:
+
+### df['all_util_cap'] = df['all_util'].clip(upper=102) 
+### df['all_util_new'] = df['all_util_cap'].fillna(0) 
+### util = df['all_util_new'] / 100.0
+### inc_cln = df['annual_inc']
+### inc_cln = inc_cln.clip(lower=5000, upper=inc_cln.quantile(0.99))
+### inc_log = np.log1p(inc_cln)
+### df['stress_util_income'] = util / (inc_log + 1e-6)
+
+
+
+
 
 
 
