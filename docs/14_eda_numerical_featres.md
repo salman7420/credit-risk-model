@@ -94,6 +94,36 @@ For **each numerical column**:
 | **all_util** | 170 |61.68% | MODERATE ✅ | filled / impute 0, capped 108.0 |
 | **total_rev_hi_lim** | 26313 |5.18% | MODERATE ✅ | cap at 201600, impute missing value with median (24000), make a new feature which has given best result that is `util_total_rev_stress_log` after performing capping and fillna to both all util and total_rev_hi_lim. |
 | **stress_util_income** | MODERATE ✅ | Featured Engineer Column: Check below for column formula, want to capture pattern of income + total utilization. Less income + high utilization = risk accounts.
+| **inq_fi**  30 |61.68% | MODERATE ✅ | filled / impute 0, capped lower=0 and upper = 99.5% |
+| **total_cu_tl**  53 |61.68% | NEGLIGIBLE ❌| Remove the column|
+| **inq_last_12m**  N/A |61.68% | MODERATE ✅| filled / impute 0, capped lower=0 and upper = 99.5%|
+| **bc_util**  1436 |4.71% | STRONG ✅ | filled / impute with median, capped lower=0 and upper = 99.5%|
+| **percent_bc_gt_75** | 242 |4.71% | MODERATE ✅ | filled / impute with median, no capping needed|
+| **bc_util_stress** | (df["bc_util"] * df["percent_bc_gt_75"]) / 100 | Feature engineering
+| **acc_open_past_24mths** | 54 | 3.63% | STRONG ✅ | filled / impute with median, upper capping at 99.5|
+| **new_account_share** |  df["acc_open_past_24mths"] / (df["open_acc"] + 1) | STRONG ✅ | Feature engineering | CAP LOWER =0 AND UPPER = 1 
+| **pct_tl_nvr_dlq** |  WEAK ✅ | Drop
+| **pub_rec_bankruptcies**  | MODERATE ✅ | IMPUTE WITH 0 |
+| **mort_acc**  | MODERATE ✅ | IMPUTE WITH 0, upper cap 99%, lower = 0 |
+| **mo_sin_old_il_acct** | NEGLIGIBLE ❌
+| **mo_sin_old_rev_tl_op** | 298 | 0% | MODERATE ✅ | median impute and clip at 472 or p99. |
+| **num_rev_accts** | impute with median and upper 45 and then use this with transformed mo_sin_old_rev_tl_op to create new feature |  df['rev_accts_to_age'] = df['num_rev_accts_new'] / df['mo_sin_old_rev_tl_op_new'] |
+| **num_il_tl** | NEGLIGIBLE ❌
+| **tot_hi_cred_lim**  | MODERATE ✅ | IMPUTE WITH mdeian, upper cap 99% |
+| **total_bc_limit**  | MODERATE ✅ | Impute with mdeian, upper cap 99.5% | feature engineer --> df['bc_limit_util'] = df['total_bc_limit_new'] / (df['revol_bal'] + 1) |
+| **avg_cur_bal**  | MODERATE ✅ | Impute with median and upper cap 99.5% |
+| **num_op_rev_tl**  | MODERATE ✅ | Impute with median and upper cap 99.5% or 26 |
+| **num_actv_rev_tl**  | MODERATE ✅ | Impute with median and upper cap 99.5% or 19 | Feature Engineer to new feature: actv_rev_util = num_actv_rev_tl_new * revol_util (after transforming both) | 
+| **num_rev_tl_bal_gt_0**  | MODERATE ✅ | Impute with median and upper cap 99.5% or 18 | Feature Engineer to new feature: df['indebt_rev_ratio'] = df['num_rev_tl_bal_gt_0_new'] / df['num_rev_accts_new'] |
+
+
+
+
+
+
+
+
+
 
 
 
