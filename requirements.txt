@@ -1,7 +1,7 @@
 
 # Python 3.11.x
 
-polars==0.20.3              # Fast dataframe library for large files
+# polars==0.20.3              # Fast dataframe library for large files
 pyarrow==14.0.1             # Parquet file support
 pandas==2.1.4             # For compatibility with some ML libraries
 numpy==1.26.2               # Numerical operations
@@ -23,3 +23,17 @@ eli5==0.13.0                # Model interpretation
 lime==0.2.0.1               # Local interpretable model explanations
 
 loguru==0.7.2               # Enhanced logging
+
+# ── Hyperparameter Tuning ─────────────────────────────────────────────────────
+optuna==3.5.0               # Bayesian hyperparameter tuning
+optuna-integration==0.0.2   # sklearn cross-val integration (compatible with optuna==3.5.0)
+
+# ── Experiment Tracking ───────────────────────────────────────────────────────
+mlflow==2.11.0              # Experiment tracking + model registry
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+joblib==1.3.2               # Model persistence (already sklearn dependency — pinned)
+python-dotenv==1.0.0        # Load .env config files
+pyyaml==6.0.1               # YAML config files
+tqdm==4.66.2                # Progress bars during training
+

@@ -9,7 +9,7 @@
 | **verification_status** | 3 | 0% | WEAK ⚠️ | One-hot encode → 2 binary cols (drop_first=True) |
 | **purpose** | 14 | 0% | WEAK ⚠️ | Group into 3 risk buckets (high/medium/low), one-hot encode → 2 cols, drop original | 
 | **addr_state** | 51 | 0% | NEGLIGIBLE ⚠️ | Group into 4 US regions, one-hot encode → 3 cols, drop original | 
-| **earliest_cr_line** | 738 dates | 0% | WEAK ⚠️ | Group into 4 US regions, one-hot encode → Create TWO features: (1) `credit_history_years` (use application date(year) - extract year from earliest_cr_line) and (2) `credit_history_months` (take credit_history_years and * 12 ), (3)`credit_maturity` bins (veteran/established/moderate/new) → 3 binary cols. Drop original. Let model pick best during training. | 
+| **earliest_cr_line** | 738 dates | 0% | WEAK ⚠️ | Group into 4 US regions, one-hot encode → Create feature: credit maturity | 
 | **application_type** | 2 | 0% | WEAK ❌ | FILTER: Keep only 'Individual' (98.2%), drop column + all joint-specific features (annual_inc_joint, dti_joint, sec_app_*, etc.) |
 | **verification_status_joint** | 3 | 98.7% | DROP ❌ | Joint application column so will be removed |  
 | **sec_app_earliest_cr_line** | N/A | 98.7% | DROP ❌ | Joint application column so will be removed | 
@@ -76,3 +76,11 @@ For tree‑based models, use the raw continuous feature; they will learn non‑l
 For GLM/Logit, use binning or non‑linear transforms (WOE, splines).
 You will almost always see credit history length emerge as a non‑trivial predictor once represented this way; consumer credit scoring models explicitly include it as a key factor.
 ​
+
+| # | Column           | Reason it needs cleaner                                                        |
+| - | ---------------- | ------------------------------------------------------------------------------ |
+| 1 | emp_length       | String "10+ years" → must become integer before imputation                     |
+| 2 | home_ownership   | 6 categories → domain-logic merge of ANY/NONE/OTHER → OWN                      |
+| 3 | purpose          | 14 sparse categories → 3 meaningful risk buckets                               |
+| 4 | addr_state       | 51 state codes → 4 US regions (too high cardinality for OHE)                   |
+| 5 | earliest_cr_line | Raw date string → credit_maturity                                              |

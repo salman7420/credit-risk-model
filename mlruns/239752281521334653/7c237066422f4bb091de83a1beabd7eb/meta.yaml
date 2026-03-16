@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/salmanrasheed/Desktop/lending-club-credit-risk/mlruns/239752281521334653/7c237066422f4bb091de83a1beabd7eb/artifacts
+end_time: 1773600274407
+entry_point_name: ''
+experiment_id: '239752281521334653'
+lifecycle_stage: active
+run_id: 7c237066422f4bb091de83a1beabd7eb
+run_name: xgboost_optuna
+run_uuid: 7c237066422f4bb091de83a1beabd7eb
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1773600269285
+status: 4
+tags: []
+user_id: salmanrasheed
