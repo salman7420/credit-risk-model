@@ -22,7 +22,6 @@ Build a production-grade **Probability of Default (PD) model** to predict loan d
 ├── src/ # Production code (modular)
 ├── models/ # Saved model artifacts
 ├── app/ # Streamlit application
-└── tests/ # Unit tests
 
 ## 📖 Documentation
 
