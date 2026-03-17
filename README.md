@@ -39,5 +39,3 @@ Comprehensive documentation is available in the `docs/` folder:
 **LinkedIn**: https://www.linkedin.com/in/salman-rasheed-ai/ 
 
 **Email**: salmandatascience25@gmail.com
-
-**Portfolio**: https://salman-football.vercel.app
