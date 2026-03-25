@@ -173,16 +173,16 @@ def make_installment(df: pd.DataFrame) -> pd.DataFrame:
     term_months = (
         df["term"]
         .astype(str)
-        .str.extract(r"(\d+)")
+        .str.extract(r"(\d+)")[0]   # ← [0] instead of .squeeze()
         .astype(float)
-        .squeeze()
     )
-    # ✅ Fix: clip lower=1 only during division — no 0-month term edge case
-    term_months = term_months.clip(lower=1).replace(0, 36)
+    term_months = term_months.clip(1, 360)   # ← positional (min, max), no kwargs
+    term_months = term_months.replace(0, 36)
 
     df["installment"] = df["loan_amnt"] / term_months
     df = df.drop(columns=["term"])
     return df
+
 
 
 def make_pti(df: pd.DataFrame) -> pd.DataFrame:

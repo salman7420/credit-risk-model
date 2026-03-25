@@ -1,0 +1,9 @@
+{
+  "best_threshold": 0.4664,
+  "val_f1": 0.4392,
+  "val_precision": 0.3362,
+  "val_recall": 0.6332,
+  "test_f1": 0.44,
+  "test_precision": 0.3367,
+  "test_recall": 0.6349
+}

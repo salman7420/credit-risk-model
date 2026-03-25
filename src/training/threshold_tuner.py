@@ -148,6 +148,7 @@ def tune():
 
     # ── Save best threshold to JSON
     threshold_path = f"{MODELS_DIR}/best_threshold.json"
+    # ✅ FIXED — f is the second positional argument
     with open(threshold_path, "w") as f:
         json.dump({
             "best_threshold": round(best_thresh, 4),
@@ -157,7 +158,8 @@ def tune():
             "test_f1":        round(test_f1, 4),
             "test_precision": round(test_precision, 4),
             "test_recall":    round(test_recall, 4),
-        }, indent=2)
+        }, f, indent=2)       # ← f added here as second argument
+
     logger.info(f"Best threshold saved → {threshold_path}")
 
     # ── Save threshold sweep plot
