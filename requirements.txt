@@ -15,11 +15,11 @@ xgboost==2.0.3              # Gradient boosting (primary model)
 
 
 shap==0.44.0                # SHAP values for model interpretation
-streamlit==1.55.0         # web app
+streamlit==1.41.0       # web app
 
 # ── Hyperparameter Tuning ─────────────────────────────────────────────────────
 optuna==3.5.0               # Bayesian hyperparameter tuning
-optuna-integration==0.0.2   # sklearn cross-val integration (compatible with optuna==3.5.0)
+optuna-integration==3.5.0  # sklearn cross-val integration (compatible with optuna==3.5.0)
 
 # ── Experiment Tracking ───────────────────────────────────────────────────────
 mlflow==2.11.0              # Experiment tracking + model registry
