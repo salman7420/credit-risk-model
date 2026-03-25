@@ -12,6 +12,12 @@ import pandas as pd
 import streamlit as st
 from pathlib import Path
 import cloudpickle
+import sys
+from pathlib import Path
+
+# Add src/ to path so custom transformers are importable on Streamlit Cloud
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "src"))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PATHS
