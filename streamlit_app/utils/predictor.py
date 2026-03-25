@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from pathlib import Path
+import cloudpickle
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PATHS
@@ -33,7 +34,8 @@ def _load_pipeline():
             f"pipeline.pkl not found at {PIPELINE_PATH}\n"
             f"Run: PYTHONPATH=src python -m training.train"
         )
-    return joblib.load(PIPELINE_PATH)
+    with open(PIPELINE_PATH, "rb") as f:
+        return cloudpickle.load(f)
 
 
 @st.cache_resource(show_spinner="⏳ Loading decision threshold...")
