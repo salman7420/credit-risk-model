@@ -99,6 +99,8 @@ PYTHONPATH=src python -m training.train
 # Launch app
 streamlit run streamlit_app/app.py
 
+## Contact
+
 Contact
 LinkedIn: https://www.linkedin.com/in/salman-rasheed-ai/
 Email: salmandatascience25@gmail.com
