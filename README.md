@@ -42,31 +42,6 @@ Python version: 3.11.x
 
 ---
 
-## Project Structure
-
-lending-club-credit-risk/
-├── data/
-│ ├── raw/ # Original and preprocessed loan CSV/Parquet files
-│ ├── processed/ # Feature-selected dataset
-│ └── splits/ # Train / validation / test splits
-├── docs/ # Project documentation (see below)
-├── models/ # Saved pipeline, threshold, and evaluation artifacts
-├── notebooks/ # Exploratory analysis
-├── src/
-│ ├── feature_engineering/ # Custom sklearn transformers (numerical + categorical)
-│ ├── pipeline/ # Master pipeline assembly
-│ ├── preprocessing/ # Raw data filtering and column selection
-│ └── training/ # Model training, threshold tuning, evaluation
-├── streamlit_app/
-│ ├── pages/ # Loan assessment page
-│ └── utils/ # Predictor logic, config
-├── .streamlit/ # Streamlit configuration
-├── requirements.txt
-└── README.md
-
-
----
-
 ## Machine Learning Pipeline
 
 **1. Preprocessing**
