@@ -27,6 +27,3 @@ __pycache__/
 # macOS
 .DS_Store
 
-# Models (optional - if too large)
-models/*.pkl
-models/*.h5
