@@ -21,7 +21,7 @@ lime==0.2.0.1               # Local interpretable model explanations
 
 loguru==0.7.2               # Enhanced logging
 
-streamlit==1.55.0.          # web app
+streamlit==1.55.0         # web app
 
 # ── Hyperparameter Tuning ─────────────────────────────────────────────────────
 optuna==3.5.0               # Bayesian hyperparameter tuning
