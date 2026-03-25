@@ -12,15 +12,9 @@ plotly==5.18.0              # Interactive plots
 
 scikit-learn==1.3.2         # Core ML algorithms (LogReg, RandomForest)
 xgboost==2.0.3              # Gradient boosting (primary model)
-catboost==1.2.2             # Categorical feature handling
-imbalanced-learn==0.11.0    # SMOTE and class imbalance handling
+
 
 shap==0.44.0                # SHAP values for model interpretation
-eli5==0.13.0                # Model interpretation
-lime==0.2.0.1               # Local interpretable model explanations
-
-loguru==0.7.2               # Enhanced logging
-
 streamlit==1.55.0         # web app
 
 # ── Hyperparameter Tuning ─────────────────────────────────────────────────────
