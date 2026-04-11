@@ -2,6 +2,11 @@
 predictor.py
 ------------
 Central bridge between the Streamlit UI and the trained ML pipeline.
+
+Changes vs original:
+  - predict() now also returns `transformed_features` — a dict of
+    {feature_name: value} for all 62 pipeline output features.
+    Used by llm/applicant_data/ to build the full applicant snapshot.
 """
 
 import json
@@ -13,22 +18,19 @@ import streamlit as st
 from pathlib import Path
 import cloudpickle
 import sys
-from pathlib import Path
 
-# Add src/ to path so custom transformers are importable on Streamlit Cloud
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PATHS
 # ─────────────────────────────────────────────────────────────────────────────
-ROOT           = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[2]
 PIPELINE_PATH  = ROOT / "models" / "pipeline.pkl"
 THRESHOLD_PATH = ROOT / "models" / "best_threshold.json"
 
 APPROVE_BELOW = 0.35
 REJECT_ABOVE  = 0.55
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CACHED LOADERS
@@ -43,7 +45,6 @@ def _load_pipeline():
     with open(PIPELINE_PATH, "rb") as f:
         return cloudpickle.load(f)
 
-
 @st.cache_resource(show_spinner="⏳ Loading decision threshold...")
 def _load_threshold() -> float:
     if not THRESHOLD_PATH.exists():
@@ -54,11 +55,9 @@ def _load_threshold() -> float:
     with open(THRESHOLD_PATH) as f:
         return float(json.load(f)["best_threshold"])
 
-
 @st.cache_resource(show_spinner="⏳ Building SHAP explainer...")
 def _load_explainer(_model):
     return shap.TreeExplainer(_model)
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DECISION LOGIC
@@ -86,7 +85,6 @@ def _get_decision(probability: float) -> dict:
             "description": "High default risk. Does not meet lending criteria.",
         }
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # SHAP — TOP FACTORS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -96,7 +94,7 @@ def _get_top_shap_factors(
     top_n: int = 5,
 ) -> pd.DataFrame:
     shap_series = pd.Series(shap_values, index=feature_names)
-    top_idx     = shap_series.abs().nlargest(top_n).index
+    top_idx = shap_series.abs().nlargest(top_n).index
     result = pd.DataFrame({
         "feature":  top_idx,
         "shap_val": shap_series[top_idx].values,
@@ -106,7 +104,6 @@ def _get_top_shap_factors(
     )
     result["shap_abs"] = result["shap_val"].abs()
     return result.sort_values("shap_abs", ascending=False).drop(columns="shap_abs").reset_index(drop=True)
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FEATURE NAME RESOLUTION
@@ -164,16 +161,12 @@ def _get_feature_names(preprocessor, n_features: int) -> list:
 
     combined = numerical_names + categorical_names
 
-    # Exact match — return as-is
     if len(combined) == n_features:
         return combined
 
-    # Count mismatch — fall back to generic but print exact counts to debug
     print(f"[predictor] WARNING: hardcoded names={len(combined)} != n_features={n_features}")
     print(f"[predictor] Numerical: {len(numerical_names)}, Categorical: {len(categorical_names)}")
     return [f"feature_{i}" for i in range(n_features)]
-
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MAIN PUBLIC FUNCTION
@@ -185,13 +178,15 @@ def predict(input_df: pd.DataFrame) -> dict:
     Args:
         input_df : pd.DataFrame — 1 row of raw feature values from the form
 
-    Returns dict:
-        probability      float        — default probability 0.0 – 1.0
-        probability_pct  float        — probability as 0–100 percentage
-        threshold        float        — best_threshold from training
-        decision         dict         — label / emoji / color / description
-        shap_factors     pd.DataFrame — top 5 SHAP drivers for this borrower
-        feature_names    list[str]    — all feature names post-transform
+    Returns dict with keys:
+        probability         float        — default probability 0.0 – 1.0
+        probability_pct     float        — probability as 0–100 percentage
+        threshold           float        — best_threshold from training
+        decision            dict         — label / emoji / color / description
+        shap_factors        pd.DataFrame — top 5 SHAP drivers for this borrower
+        feature_names       list[str]    — all 62 feature names post-transform
+        transformed_features dict        — {feature_name: value} for all 62 features
+                                           (NEW — used by llm/applicant_data/)
     """
     pipeline  = _load_pipeline()
     threshold = _load_threshold()
@@ -199,14 +194,13 @@ def predict(input_df: pd.DataFrame) -> dict:
     preprocessor = pipeline.named_steps["preprocessor"]
     model        = pipeline.named_steps["model"]
 
-    # ── Transform (uses stored train statistics — no refit)
+    # ── Transform input (uses stored train statistics — no refit)
     X_transformed = preprocessor.transform(input_df)
     n_features    = X_transformed.shape[1]
 
-    # ── Resolve feature names — always matches actual output shape
+    # ── Resolve feature names
     feature_names = _get_feature_names(preprocessor, n_features)
 
-    # ── Debug log — visible in terminal, harmless in production
     print(f"[predictor] X_transformed : {X_transformed.shape}")
     print(f"[predictor] feature_names : {len(feature_names)} → {feature_names[:5]}...")
 
@@ -219,24 +213,28 @@ def predict(input_df: pd.DataFrame) -> dict:
     shap_output = explainer.shap_values(X_transformed)
 
     if isinstance(shap_output, list):
-        shap_row = shap_output[1][0]        # older SHAP: [neg_class, pos_class]
+        shap_row = shap_output[1][0]      # older SHAP: [neg_class, pos_class]
     elif shap_output.ndim == 3:
-        shap_row = shap_output[0, :, 1]     # newer SHAP: (samples, features, classes)
+        shap_row = shap_output[0, :, 1]  # newer SHAP: (samples, features, classes)
     else:
-        shap_row = shap_output[0]           # standard 2D: (samples, features)
+        shap_row = shap_output[0]         # standard 2D: (samples, features)
 
-    # ── Safety check — lengths must match before building Series
     if len(shap_row) != len(feature_names):
-        print(f"[predictor] WARNING: shap_row={len(shap_row)} != feature_names={len(feature_names)} — using generic names")
+        print(f"[predictor] WARNING: shap_row={len(shap_row)} != feature_names={len(feature_names)}")
         feature_names = [f"feature_{i}" for i in range(len(shap_row))]
 
     top_factors = _get_top_shap_factors(shap_row, feature_names, top_n=5)
 
+    # ── NEW: Build named dict of all transformed feature values
+    # X_transformed is a numpy array — convert to flat dict using feature_names
+    transformed_features: dict = dict(zip(feature_names, X_transformed[0].tolist()))
+
     return {
-        "probability":     probability,
-        "probability_pct": round(probability * 100, 1),
-        "threshold":       threshold,
-        "decision":        decision,
-        "shap_factors":    top_factors,
-        "feature_names":   feature_names,
+        "probability":          probability,
+        "probability_pct":      round(probability * 100, 1),
+        "threshold":            threshold,
+        "decision":             decision,
+        "shap_factors":         top_factors,
+        "feature_names":        feature_names,
+        "transformed_features": transformed_features,   # ← NEW
     }

@@ -5,6 +5,9 @@ Entry point for the Lending Club Credit Risk Tool.
 Sets global page config and renders the landing page.
 """
 
+from dotenv import load_dotenv
+load_dotenv() 
+
 import streamlit as st
 
 st.set_page_config(

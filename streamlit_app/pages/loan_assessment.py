@@ -3,7 +3,8 @@
 --------------------
 Single borrower risk assessment form.
 Collects all raw features exactly as seen during training,
-passes to predictor.py, displays risk score + decision.
+passes to predictor.py, displays risk score + decision,
+then calls the LLM narrative pipeline for a full written assessment.
 """
 
 import streamlit as st
@@ -13,20 +14,24 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
+from streamlit_app.utils.predictor import predict
+from llm.data.snapshot_builder import build_snapshot
+from llm.orchestrator.llm_orchestrator import run_narrative_pipeline
+
 st.set_page_config(
     page_title="Loan Assessment",
-    page_icon="📋",
+    page_icon="\U0001f4cb",
     layout="wide",
 )
 
-st.title("📋 Loan Risk Assessment")
+st.title("\U0001f4cb Loan Risk Assessment")
 st.markdown("Fill in the borrower details below and click **Assess Risk** to get a decision.")
 st.divider()
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # SECTION 1 — LOAN DETAILS
-# ─────────────────────────────────────────────────────────────────────────────
-st.subheader("🏷️ Loan Details")
+# -----------------------------------------------------------------------------
+st.subheader("\U0001f3f7\ufe0f Loan Details")
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -35,14 +40,12 @@ with col1:
         value=10000, step=500,
         help="Total loan amount requested",
     )
-
 with col2:
     term = st.selectbox(
         "Loan Term",
         options=[" 36 months", " 60 months"],
         help="Number of months for repayment",
     )
-
 with col3:
     purpose = st.selectbox(
         "Loan Purpose",
@@ -55,11 +58,11 @@ with col3:
         help="Primary reason for the loan",
     )
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # SECTION 2 — BORROWER PROFILE
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 st.divider()
-st.subheader("👤 Borrower Profile")
+st.subheader("\U0001f464 Borrower Profile")
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -77,7 +80,6 @@ with col1:
         index=6,
         help="Years at current employer",
     )
-
 with col2:
     home_ownership = st.selectbox(
         "Home Ownership",
@@ -89,13 +91,12 @@ with col2:
         options=["Not Verified", "Verified", "Source Verified"],
         help="Whether income was verified by Lending Club",
     )
-
 with col3:
     dti = st.number_input(
         "Debt-to-Income Ratio (DTI)",
         min_value=0.0, max_value=50.0,
         value=15.0, step=0.1,
-        help="Monthly debt payments / monthly income × 100",
+        help="Monthly debt payments / monthly income x 100",
     )
     addr_state = st.selectbox(
         "State",
@@ -107,14 +108,14 @@ with col3:
             "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC",
         ],
         index=4,
-        help="Borrower's state of residence",
+        help="Borrower state of residence",
     )
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # SECTION 3 — CREDIT HISTORY
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 st.divider()
-st.subheader("📊 Credit History")
+st.subheader("\U0001f4ca Credit History")
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -133,7 +134,6 @@ with col1:
         min_value=0, max_value=10, value=1,
         help="Number of hard credit inquiries in last 6 months",
     )
-
 with col2:
     open_acc = st.number_input(
         "Open Credit Accounts",
@@ -150,7 +150,6 @@ with col2:
         min_value=0, max_value=5, value=0,
         help="Number of public record bankruptcies",
     )
-
 with col3:
     mort_acc = st.number_input(
         "Mortgage Accounts",
@@ -168,11 +167,11 @@ with col3:
         help="Number of new accounts opened in past 24 months",
     )
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # SECTION 4 — REVOLVING CREDIT
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 st.divider()
-st.subheader("💳 Revolving Credit")
+st.subheader("\U0001f4b3 Revolving Credit")
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -186,7 +185,6 @@ with col1:
         min_value=0.0, max_value=100.0, value=45.0, step=0.1,
         help="Revolving credit used / total revolving credit limit",
     )
-
 with col2:
     total_rev_hi_lim = st.number_input(
         "Total Revolving High Credit Limit ($)",
@@ -198,7 +196,6 @@ with col2:
         min_value=0, max_value=60, value=13,
         help="Total number of revolving accounts",
     )
-
 with col3:
     num_actv_rev_tl = st.number_input(
         "Active Revolving Accounts",
@@ -211,11 +208,11 @@ with col3:
         help="Revolving accounts currently carrying a balance",
     )
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # SECTION 5 — INSTALLMENT & UTILIZATION
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 st.divider()
-st.subheader("🏦 Installment & Utilization")
+st.subheader("\U0001f3e6 Installment & Utilization")
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -229,7 +226,6 @@ with col1:
         min_value=0, max_value=2000000, value=112000, step=1000,
         help="Total high credit/credit limit across all accounts",
     )
-
 with col2:
     bc_util = st.number_input(
         "Bankcard Utilization (%)",
@@ -241,7 +237,6 @@ with col2:
         min_value=0, max_value=300000, value=15000, step=500,
         help="Total bankcard high credit/credit limit",
     )
-
 with col3:
     percent_bc_gt_75 = st.number_input(
         "% Bankcards > 75% Utilized",
@@ -254,11 +249,11 @@ with col3:
         help="Average current balance of all accounts",
     )
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # SECTION 6 — INSTALLMENT LOAN ACTIVITY
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 st.divider()
-st.subheader("📈 Installment Loan Activity")
+st.subheader("\U0001f4c8 Installment Loan Activity")
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -287,7 +282,6 @@ with col1:
         min_value=0, max_value=40, value=7,
         help="Number of open revolving accounts",
     )
-
 with col2:
     open_il_24m = st.number_input(
         "Installment Accounts Opened (Last 24m)",
@@ -304,7 +298,6 @@ with col2:
         min_value=0, max_value=15, value=2,
         help="Number of revolving accounts opened in last 12 months",
     )
-
 with col3:
     open_rv_24m = st.number_input(
         "Revolving Accounts Opened (Last 24m)",
@@ -322,15 +315,16 @@ with col3:
         help="Number of personal finance inquiries",
     )
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # SUBMIT BUTTON
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 st.divider()
 col1, col2, col3 = st.columns([1, 1, 1])
 with col2:
-    submitted = st.button("🔍 Assess Risk", use_container_width=True, type="primary")
+    submitted = st.button("\U0001f50d Assess Risk", use_container_width=True, type="primary")
 
 if submitted:
+
     # ── Build raw input DataFrame exactly matching training column names
     input_data = pd.DataFrame([{
         "loan_amnt":            loan_amnt,
@@ -376,26 +370,32 @@ if submitted:
         "num_rev_tl_bal_gt_0":  num_rev_tl_bal_gt_0,
     }])
 
-    # ── Run prediction
-    with st.spinner("🔍 Analyzing borrower risk..."):
-        from streamlit_app.utils.predictor import predict
+    # ── Run prediction + build snapshot
+    with st.spinner("\U0001f50d Analyzing borrower risk..."):
         result = predict(input_data)
+        features, prediction = build_snapshot(input_df=input_data, predictor_result=result)
 
     st.divider()
 
     # ── DECISION BANNER
     decision = result["decision"]
     if decision["label"] == "APPROVE":
-        st.success(f'{decision["emoji"]} **{decision["label"]}** — {decision["description"]}')
+        st.success(
+            f'{decision["emoji"]} **{decision["label"]}** — {decision["description"]}'
+        )
     elif decision["label"] == "MANUAL REVIEW":
-        st.warning(f'{decision["emoji"]} **{decision["label"]}** — {decision["description"]}')
+        st.warning(
+            f'{decision["emoji"]} **{decision["label"]}** — {decision["description"]}'
+        )
     else:
-        st.error(f'{decision["emoji"]} **{decision["label"]}** — {decision["description"]}')
+        st.error(
+            f'{decision["emoji"]} **{decision["label"]}** — {decision["description"]}'
+        )
 
     # ── SCORE METRICS ROW
     col1, col2, col3 = st.columns(3)
-    col1.metric("Default Probability",  f'{result["probability_pct"]}%')
-    col2.metric("Decision Threshold",   f'{round(result["threshold"] * 100, 1)}%')
+    col1.metric("Default Probability", f'{result["probability_pct"]}%')
+    col2.metric("Decision Threshold",  f'{round(result["threshold"] * 100, 1)}%')
     col3.metric(
         "Risk Zone",
         decision["label"],
@@ -405,18 +405,49 @@ if submitted:
 
     # ── SHAP FACTORS
     st.divider()
-    st.subheader("🔍 Top Risk Drivers")
+    st.subheader("\U0001f50d Top Risk Drivers")
     st.caption("The 5 features with the highest impact on this borrower's risk score.")
 
     for _, row in result["shap_factors"].iterrows():
-        icon = "🔴" if row["shap_val"] > 0 else "🟢"
+        icon = "\U0001f534" if row["shap_val"] > 0 else "\U0001f7e2"
         st.markdown(
             f"{icon} **{row['feature']}** — SHAP impact: "
-            f"`{row['shap_val']:+.4f}` &nbsp; {row['direction']}"
+            f"`{row['shap_val']:+.4f}` {row['direction']}"
         )
 
     # ── RAW INPUT PREVIEW
-    with st.expander("📄 Raw Input Preview"):
+    with st.expander("\U0001f4c4 Raw Input Preview"):
         preview = input_data.T.rename(columns={0: "Value"})
         preview["Value"] = preview["Value"].astype(str)
         st.dataframe(preview)
+
+    # -------------------------------------------------------------------------
+    # LLM NARRATIVE — Full written risk assessment
+    # -------------------------------------------------------------------------
+    st.divider()
+    st.subheader("\U0001f4dd Risk Narrative")
+    st.caption(
+        "AI-generated assessment based on borrower data and model risk drivers. "
+        "For informational purposes only — not a substitute for underwriter judgment."
+    )
+
+    with st.spinner("\u270d\ufe0f Generating risk narrative..."):
+        try:
+            narrative = run_narrative_pipeline(features, prediction)
+        except FileNotFoundError as e:
+            st.error(f"Prompt file missing: {e}")
+            narrative = None
+        except RuntimeError as e:
+            st.error(f"LLM call failed: {e}")
+            narrative = None
+
+    if narrative:
+        if not narrative.parsed:
+            st.warning(
+                "\u26a0\ufe0f Narrative was generated but could not be structured into sections. "
+                "Displaying full text below."
+            )
+        for title, content in narrative.sections.items():
+            st.markdown(f"### {title}")
+            st.markdown(content)
+            st.markdown("")
